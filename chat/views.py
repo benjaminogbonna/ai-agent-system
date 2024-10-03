@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.conf import settings
+from django.utils.safestring import mark_safe
 from .forms import DocumentUploadForm
 from .models import UploadedDocument
 import fitz
 import docx
 import json
+import os
 
 import google.generativeai as genai
 genai.configure(api_key=settings.GEMINI_API_KEY)
@@ -61,6 +63,9 @@ def upload_document(request):
 
             # Save the document content into the session
             request.session['document_content'] = content
+            # I added this in case you want to delete the document after processing it.
+            # if os.path.exists(file_path):
+            #     os.remove(file_path)
             return redirect('chat')
     else:
         form = DocumentUploadForm()
@@ -73,13 +78,9 @@ def chat(request):
     document_content = request.session.get('document_content', '')
 
     if request.method == 'POST':
-        # user_query = request.POST.get('user_query')
         user_query = json.loads(request.body).get('user_query')
-        # user_query = data.get('user_query')
-        response = f"Document content: {document_content[:500]}..."  # Limiting to 500 chars
         ai_response = ai_chat.send_message(f'{user_query} \n Document: {document_content}')
-
-        return JsonResponse({"response": ai_response.text})
+        return JsonResponse({"response": mark_safe(ai_response.text)})
 
     return render(request, 'chat.html', {})
 
