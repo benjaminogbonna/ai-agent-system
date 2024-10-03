@@ -83,4 +83,3 @@ def chat(request):
         return JsonResponse({"response": mark_safe(ai_response.text)})
 
     return render(request, 'chat.html', {})
-
