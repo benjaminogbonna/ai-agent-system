@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Document Chat{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3>Chat with Document</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="chat-box" class="chat-box">
+                            <!-- Chat content will be dynamically added here -->
+                        </div>
+                        <form method="POST" >
+                            {% csrf_token %}
+                            <div class="input-group mb-3">
+<!--                                <input type="text" id="user_query" name="user_query" class="form-control" placeholder="Ask a question...">-->
+                                <textarea id="user_query" name="user_query" class="form-control" placeholder="Ask a question..." rows="2"></textarea>
+                                <div class="input-group-append">
+                                    <button id="send_query" class="btn btn-primary" type="button">Send</button>
+                                </div>
+                            </div>
+
+                        </form>
+
+                        <div id="response"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.getElementById('send_query').onclick = async function() {
+            let userQuery = document.getElementById('user_query').value;
+
+            // Add user message to the chat box
+            let chatBox = document.getElementById('chat-box');
+            let userMessage = `<div class="alert alert-secondary" role="alert"><strong>You:</strong> ${userQuery}</div>`;
+            chatBox.innerHTML += userMessage;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Send the query to the server
+            let response = await fetch('', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({user_query: userQuery})
+            });
+
+            let data = await response.json();
+
+            // Add AI response to the chat box
+            let aiMessage = `<div class="alert alert-primary" role="alert"><strong>AI:</strong> ${data.response}</div>`;
+            chatBox.innerHTML += aiMessage;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+
+    </script>
+{% endblock %}
